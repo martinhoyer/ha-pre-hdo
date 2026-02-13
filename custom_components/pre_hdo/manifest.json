@@ -1,6 +1,6 @@
 {
-  "domain": "pre_hdo",
-  "name": "PRE HDO",
+  "domain": "predistribuce",
+  "name": "PRE HDO tariff tracking",
   "codeowners": ["@martinhoyer"],
   "config_flow": true,
   "documentation": "https://github.com/martinhoyer/ha-pre-hdo",
