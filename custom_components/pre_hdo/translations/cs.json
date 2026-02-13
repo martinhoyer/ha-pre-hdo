@@ -1,0 +1,38 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "PRE Distribuce HDO",
+        "description": "Zadejte kód povelu přijímače HDO. Naleznete ho na žluté/bílé nálepce na přijímači HDO nebo na elektroměru.",
+        "data": {
+          "receiver_command_id": "Kód povelu přijímače (např. 492)"
+        }
+      }
+    },
+    "error": {
+      "invalid_command_id": "Neplatný kód povelu přijímače. Pro tento kód nebyla nalezena žádná data HDO.",
+      "cannot_connect": "Nelze se připojit k serveru PRE Distribuce."
+    },
+    "abort": {
+      "already_configured": "Tento kód povelu přijímače je již nakonfigurován."
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "low_tariff": {
+        "name": "Nízký tarif"
+      }
+    },
+    "sensor": {
+      "minutes_to_low_tariff": {
+        "name": "Minut do nízkého tarifu"
+      },
+      "minutes_to_high_tariff": {
+        "name": "Minut do vysokého tarifu"
+      },
+      "current_tariff": {
+        "name": "Aktuální tarif"
+      }
+    }
+  }
+}

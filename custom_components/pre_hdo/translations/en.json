@@ -1,0 +1,38 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "PRE Distribuce HDO",
+        "description": "Enter your HDO receiver command ID. You can find it on the yellow/white sticker on your HDO receiver or electricity meter.",
+        "data": {
+          "receiver_command_id": "Receiver command ID (e.g. 492)"
+        }
+      }
+    },
+    "error": {
+      "invalid_command_id": "Invalid receiver command ID. No HDO data found for this code.",
+      "cannot_connect": "Cannot connect to PRE Distribuce server."
+    },
+    "abort": {
+      "already_configured": "This receiver command ID is already configured."
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "low_tariff": {
+        "name": "Low tariff"
+      }
+    },
+    "sensor": {
+      "minutes_to_low_tariff": {
+        "name": "Minutes to low tariff"
+      },
+      "minutes_to_high_tariff": {
+        "name": "Minutes to high tariff"
+      },
+      "current_tariff": {
+        "name": "Current tariff"
+      }
+    }
+  }
+}

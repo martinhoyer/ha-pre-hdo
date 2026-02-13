@@ -1,0 +1,107 @@
+[project]
+name = "ha-pre-hdo"
+version = "2.0.0"
+description = "PRE Distribuce HDO tariff tracking for Home Assistant"
+license = "MIT"
+requires-python = ">=3.12"
+dependencies = [
+    "aiohttp>=3.13.3",
+]
+
+[dependency-groups]
+dev = [
+    "aioresponses>=0.7.8",
+    "homeassistant>=0.31.1",
+    "pytest>=9.0.2",
+    "pytest-asyncio>=1.3.0",
+    "ruff>=0.15.1",
+    "ty>=0.0.17",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+pythonpath = ["."]
+
+[tool.ruff.lint]
+select = [
+    "YTT",
+    "ANN",
+    "ASYNC",
+    "S",
+    "BLE",
+    "FBT",
+    "B",
+    "A",
+    "COM",
+    "C4",
+    "DTZ",
+    "T10",
+    "EM",
+    "EXE",
+    "FIX",
+    "FA",
+    "INT",
+    "ISC",
+    "ICN",
+    "LOG",
+    "G",
+    "INP",
+    "PIE",
+    "T20",
+    "PYI",
+    "PT",
+    "Q",
+    "RSE",
+    "RET",
+    "SLF",
+    "SIM",
+    "SLOT",
+    "TID",
+    "TD",
+    "TC",
+    "ARG",
+    "PTH",
+    "FLY",
+    "I",
+    "C90",
+    "N",
+    "PERF",
+    "E",
+    "W",
+    "F",
+    "PGH",
+    "PL",
+    "PLC",
+    "PLE",
+    "PLR",
+    "PLW",
+    "UP",
+    "FURB",
+    "RUF",
+    "TRY",
+]
+ignore = [
+    # https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules
+    "W191",
+    "E111",
+    "E114",
+    "E117",
+    "D206",
+    "D300",
+    "Q000",
+    "Q001",
+    "Q002",
+    "Q003",
+    "COM812",
+    "COM819",
+]
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = [
+    "S",
+    "PLR2004",
+    "INP001",
+    "ANN",
+    "PLC0415",
+    "B017"
+]

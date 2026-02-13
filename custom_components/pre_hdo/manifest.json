@@ -1,0 +1,11 @@
+{
+  "domain": "pre_hdo",
+  "name": "PRE HDO",
+  "documentation": "https://github.com/martinhoyer/ha-pre-hdo",
+  "issue_tracker": "https://github.com/martinhoyer/ha-pre-hdo/issues",
+  "codeowners": ["@martinhoyer"],
+  "version": "2.0.0",
+  "config_flow": true,
+  "iot_class": "cloud_polling",
+  "requirements": []
+}
