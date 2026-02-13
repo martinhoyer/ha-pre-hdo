@@ -14,6 +14,7 @@ from .const import CONF_RECEIVER_COMMAND_ID, DOMAIN
 from .coordinator import HdoData, PreHdoCoordinator
 
 if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
     from . import PreHdoConfigEntry
@@ -27,6 +28,7 @@ def can_appliance_run(data: HdoData, minutes_needed: int) -> bool:
 
 
 async def async_setup_entry(
+    hass: HomeAssistant,  # noqa: ARG001
     entry: PreHdoConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:

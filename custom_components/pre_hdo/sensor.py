@@ -15,12 +15,14 @@ from .const import CONF_RECEIVER_COMMAND_ID, DOMAIN
 from .coordinator import PreHdoCoordinator
 
 if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
     from . import PreHdoConfigEntry
 
 
 async def async_setup_entry(
+    hass: HomeAssistant,  # noqa: ARG001
     entry: PreHdoConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
