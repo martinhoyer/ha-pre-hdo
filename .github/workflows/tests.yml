@@ -17,3 +17,5 @@ jobs:
         with:
           python-version: 3.13
       - run: uv run pytest --tb=short -v
+      - run: uv run ruff check --output-format=github .
+      - run: uv run ruff format --diff
