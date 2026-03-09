@@ -19,7 +19,7 @@ class TestSensorValues:
 
     def test_minutes_to_low_tariff_during_high(self) -> None:
         data = HdoData(
-            periods=SAMPLE_PERIODS,
+            schedules=[],
             current_tariff="VT",
             is_low_tariff=False,
             minutes_to_next_change=180,
@@ -30,7 +30,7 @@ class TestSensorValues:
 
     def test_minutes_to_low_tariff_during_low(self) -> None:
         data = HdoData(
-            periods=SAMPLE_PERIODS,
+            schedules=[],
             current_tariff="NT",
             is_low_tariff=True,
             minutes_to_next_change=120,
@@ -41,7 +41,7 @@ class TestSensorValues:
 
     def test_minutes_to_high_tariff_during_low(self) -> None:
         data = HdoData(
-            periods=SAMPLE_PERIODS,
+            schedules=[],
             current_tariff="NT",
             is_low_tariff=True,
             minutes_to_next_change=120,

@@ -22,7 +22,7 @@ class TestCanApplianceRun:
         from custom_components.pre_hdo.binary_sensor import can_appliance_run
 
         data = HdoData(
-            periods=SAMPLE_PERIODS,
+            schedules=[],
             current_tariff="NT",
             is_low_tariff=True,
             minutes_to_next_change=180,
@@ -36,7 +36,7 @@ class TestCanApplianceRun:
         from custom_components.pre_hdo.binary_sensor import can_appliance_run
 
         data = HdoData(
-            periods=SAMPLE_PERIODS,
+            schedules=[],
             current_tariff="NT",
             is_low_tariff=True,
             minutes_to_next_change=120,
@@ -50,7 +50,7 @@ class TestCanApplianceRun:
         from custom_components.pre_hdo.binary_sensor import can_appliance_run
 
         data = HdoData(
-            periods=SAMPLE_PERIODS,
+            schedules=[],
             current_tariff="VT",
             is_low_tariff=False,
             minutes_to_next_change=60,
