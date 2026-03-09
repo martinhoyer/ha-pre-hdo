@@ -2,13 +2,11 @@
 
 from __future__ import annotations
 
-from datetime import datetime
 from typing import TYPE_CHECKING
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
-    SensorStateClass,
 )
 from homeassistant.const import UnitOfTime
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -17,6 +15,8 @@ from .const import CONF_RECEIVER_COMMAND_ID, DOMAIN
 from .coordinator import PreHdoCoordinator
 
 if TYPE_CHECKING:
+    from datetime import datetime
+
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
 

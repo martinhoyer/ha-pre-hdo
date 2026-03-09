@@ -13,13 +13,13 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_RECEIVER_COMMAND_ID, DOMAIN, PRAGUE_TZ
 from .coordinator import HdoData, PreHdoCoordinator
-from .parser import HdoPeriod
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
     from . import PreHdoConfigEntry
+    from .parser import HdoPeriod
 
 
 def can_appliance_run(data: HdoData, minutes_needed: int) -> bool:
