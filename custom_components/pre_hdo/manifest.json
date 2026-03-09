@@ -7,5 +7,5 @@
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/martinhoyer/ha-pre-hdo/issues",
   "requirements": [],
-  "version": "2.0.0"
+  "version": "0.1.3"
 }
