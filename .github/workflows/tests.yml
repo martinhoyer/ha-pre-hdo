@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@v6
       - uses: astral-sh/setup-uv@v7
         with:
-          python-version: 3.13
+          python-version: 3.14
       - run: uv run pytest --tb=short -v
       - run: uv run ruff check --output-format=github .
       - run: uv run ruff format --diff --exit-non-zero-on-format
