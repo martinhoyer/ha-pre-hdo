@@ -1,9 +1,9 @@
 """Tests for PRE Distribuce binary sensor."""
 
-from datetime import time
+from datetime import date, time
 
 from custom_components.pre_hdo.coordinator import HdoData
-from custom_components.pre_hdo.parser import HdoPeriod
+from custom_components.pre_hdo.parser import HdoDaySchedule, HdoPeriod
 
 SAMPLE_PERIODS = [
     HdoPeriod(tariff="VT", start=time(0, 0), end=time(1, 0)),
@@ -11,6 +11,14 @@ SAMPLE_PERIODS = [
     HdoPeriod(tariff="VT", start=time(6, 0), end=time(13, 0)),
     HdoPeriod(tariff="NT", start=time(13, 0), end=time(16, 0)),
     HdoPeriod(tariff="VT", start=time(16, 0), end=time(0, 0)),
+]
+
+SAMPLE_SCHEDULES = [
+    HdoDaySchedule(
+        date_label="pondělí 10.03.",
+        dates=[date(2026, 3, 10)],
+        periods=SAMPLE_PERIODS,
+    ),
 ]
 
 
@@ -65,3 +73,17 @@ class TestCanApplianceRun:
 
         data = HdoData()
         assert can_appliance_run(data, 30) is False
+
+
+class TestBinarySensorAttributes:
+    def test_periods_today_from_schedules(self) -> None:
+        data = HdoData(
+            schedules=SAMPLE_SCHEDULES,
+            current_tariff="NT",
+            is_low_tariff=True,
+            minutes_to_next_change=120,
+            minutes_to_low_tariff=0,
+            minutes_to_high_tariff=120,
+        )
+        assert len(data.schedules) == 1
+        assert len(data.schedules[0].periods) == 5
