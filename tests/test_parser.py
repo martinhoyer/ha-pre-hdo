@@ -3,7 +3,6 @@
 from datetime import date, time
 
 from custom_components.pre_hdo.parser import (
-    HdoDaySchedule,
     get_current_tariff,
     get_time_remaining,
     parse_hdo_multi_day,
@@ -96,9 +95,11 @@ class TestParseHdoMultiDay:
             '<div class="blue-text pull-left">pondělí 30.12. - pátek 03.01.</div>'
             '<div class="overflow-bar"></div>'
             '<span style="left: 0.00%;" class="hdovt"></span>'
-            '<span style="left: 0.00%;" class="span-overflow" title="00:00 - 06:00"></span>'
+            '<span style="left: 0.00%;" class="span-overflow"'
+            ' title="00:00 - 06:00"></span>'
             '<span style="left: 25.00%;" class="hdont"></span>'
-            '<span style="left: 25.00%;" class="span-overflow" title="06:00 - 00:00"></span>'
+            '<span style="left: 25.00%;" class="span-overflow"'
+            ' title="06:00 - 00:00"></span>'
             "</div>"
         )
         schedules = parse_hdo_multi_day(html, 2026)

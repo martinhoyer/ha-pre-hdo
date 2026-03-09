@@ -16,5 +16,29 @@
     "abort": {
       "already_configured": "This receiver command ID is already configured."
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "low_tariff": {
+        "name": "Low tariff"
+      }
+    },
+    "sensor": {
+      "minutes_to_low_tariff": {
+        "name": "Minutes to low tariff"
+      },
+      "minutes_to_high_tariff": {
+        "name": "Minutes to high tariff"
+      },
+      "current_tariff": {
+        "name": "Current tariff"
+      },
+      "next_low_tariff_start": {
+        "name": "Next low tariff start"
+      },
+      "next_high_tariff_start": {
+        "name": "Next high tariff start"
+      }
+    }
   }
 }

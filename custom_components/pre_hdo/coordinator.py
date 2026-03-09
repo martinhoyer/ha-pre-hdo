@@ -124,9 +124,7 @@ def process_periods(
         )
     elif current_tariff == "VT":
         minutes_to_high = 0
-        minutes_to_low = (
-            int((next_low - now).total_seconds() / 60) if next_low else 0
-        )
+        minutes_to_low = int((next_low - now).total_seconds() / 60) if next_low else 0
     else:
         minutes_to_low = 0
         minutes_to_high = 0

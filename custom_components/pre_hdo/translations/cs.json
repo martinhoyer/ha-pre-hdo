@@ -32,6 +32,12 @@
       },
       "current_tariff": {
         "name": "Aktuální tarif"
+      },
+      "next_low_tariff_start": {
+        "name": "Začátek dalšího nízkého tarifu"
+      },
+      "next_high_tariff_start": {
+        "name": "Začátek dalšího vysokého tarifu"
       }
     }
   }
