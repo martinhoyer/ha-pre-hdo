@@ -5,7 +5,7 @@ from aiohttp import ClientSession
 from aioresponses import aioresponses
 
 from custom_components.pre_hdo.api_client import PreHdoApiClient, PreHdoApiError
-from custom_components.pre_hdo.const import HDO_ONE_DAY_URL
+from custom_components.pre_hdo.const import HDO_MULTI_DAY_URL, HDO_ONE_DAY_URL
 
 
 class TestPreHdoApiClient:
@@ -66,3 +66,26 @@ class TestPreHdoApiClient:
                 mock.post(HDO_ONE_DAY_URL, payload={"html": ""})
                 result = await client.async_validate_command_id("999")
                 assert result is False
+
+
+class TestPreHdoApiClientMultiDay:
+    @pytest.mark.asyncio
+    async def test_fetch_multi_day_returns_schedules(
+        self, sample_multi_day_json
+    ) -> None:
+        async with ClientSession() as session:
+            client = PreHdoApiClient(session=session)
+            with aioresponses() as mock:
+                mock.post(HDO_MULTI_DAY_URL, payload=sample_multi_day_json)
+                schedules = await client.async_get_hdo_multi_day("492")
+                assert len(schedules) == 2
+                assert len(schedules[0].periods) == 5
+
+    @pytest.mark.asyncio
+    async def test_fetch_multi_day_http_error_raises(self) -> None:
+        async with ClientSession() as session:
+            client = PreHdoApiClient(session=session)
+            with aioresponses() as mock:
+                mock.post(HDO_MULTI_DAY_URL, status=500)
+                with pytest.raises(PreHdoApiError):
+                    await client.async_get_hdo_multi_day("492")
