@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import logging
-from datetime import UTC, datetime
+from datetime import datetime
 
 from aiohttp import ClientError, ClientSession
 
-from .const import HDO_ONE_DAY_URL
+from .const import HDO_ONE_DAY_URL, PRAGUE_TZ
 from .parser import HdoPeriod, parse_hdo_periods
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,7 +42,7 @@ class PreHdoApiClient:
 
         """
         if date_str is None:
-            today = datetime.now(tz=UTC).date()
+            today = datetime.now(tz=PRAGUE_TZ).date()
             date_str = today.strftime("%d.%m.%Y")
 
         data = {

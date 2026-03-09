@@ -4,13 +4,13 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from datetime import UTC, datetime, time, timedelta
+from datetime import datetime, time, timedelta
 from typing import TYPE_CHECKING
 
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api_client import PreHdoApiClient, PreHdoApiError
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, PRAGUE_TZ
 from .parser import HdoPeriod, get_current_tariff, get_time_remaining
 
 if TYPE_CHECKING:
@@ -110,5 +110,5 @@ class PreHdoCoordinator(DataUpdateCoordinator[HdoData]):
             msg = f"Error fetching HDO data: {err}"
             raise UpdateFailed(msg) from err
 
-        now = datetime.now(tz=UTC).time()
+        now = datetime.now(tz=PRAGUE_TZ).time()
         return process_periods(periods, now)
