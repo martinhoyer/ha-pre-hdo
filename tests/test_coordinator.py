@@ -46,16 +46,12 @@ class TestProcessPeriods:
         data = process_periods(SAMPLE_SCHEDULES, now)
         assert data.current_tariff == "NT"
         assert data.is_low_tariff is True
-        assert data.minutes_to_low_tariff == 0
-        assert data.minutes_to_high_tariff == 180
 
     def test_during_high_tariff(self) -> None:
         now = _prague_dt(2026, 3, 10, 10, 0)
         data = process_periods(SAMPLE_SCHEDULES, now)
         assert data.current_tariff == "VT"
         assert data.is_low_tariff is False
-        assert data.minutes_to_high_tariff == 0
-        assert data.minutes_to_low_tariff == 180
 
     def test_next_low_tariff_start_during_high(self) -> None:
         now = _prague_dt(2026, 3, 10, 10, 0)

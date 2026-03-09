@@ -24,9 +24,11 @@ if TYPE_CHECKING:
 
 def can_appliance_run(data: HdoData, minutes_needed: int) -> bool:
     """Check if an appliance can complete within the current low tariff window."""
-    if not data.is_low_tariff:
+    if not data.is_low_tariff or data.next_high_tariff_start is None:
         return False
-    return minutes_needed < data.minutes_to_high_tariff
+    now = datetime.now(tz=PRAGUE_TZ)
+    minutes_remaining = int((data.next_high_tariff_start - now).total_seconds() / 60)
+    return minutes_needed < minutes_remaining
 
 
 async def async_setup_entry(
