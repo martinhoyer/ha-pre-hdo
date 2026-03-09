@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 from typing import TYPE_CHECKING
 
 from homeassistant.components.sensor import (
+    SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
 )
@@ -35,6 +37,8 @@ async def async_setup_entry(
             HdoMinutesToLowTariffSensor(coordinator, command_id),
             HdoMinutesToHighTariffSensor(coordinator, command_id),
             HdoCurrentTariffSensor(coordinator, command_id),
+            HdoNextLowTariffStartSensor(coordinator, command_id),
+            HdoNextHighTariffStartSensor(coordinator, command_id),
         ]
     )
 
@@ -63,7 +67,6 @@ class HdoMinutesToLowTariffSensor(HdoBaseSensor):
 
     _attr_icon = "mdi:clock-start"
     _attr_native_unit_of_measurement = UnitOfTime.MINUTES
-    _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_translation_key = "minutes_to_low_tariff"
 
     def __init__(self, coordinator: PreHdoCoordinator, command_id: str) -> None:
@@ -82,7 +85,6 @@ class HdoMinutesToHighTariffSensor(HdoBaseSensor):
 
     _attr_icon = "mdi:clock-end"
     _attr_native_unit_of_measurement = UnitOfTime.MINUTES
-    _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_translation_key = "minutes_to_high_tariff"
 
     def __init__(self, coordinator: PreHdoCoordinator, command_id: str) -> None:
@@ -111,3 +113,39 @@ class HdoCurrentTariffSensor(HdoBaseSensor):
         if self.coordinator.data is None:
             return None
         return self.coordinator.data.current_tariff
+
+
+class HdoNextLowTariffStartSensor(HdoBaseSensor):
+    """Sensor showing when the next low tariff period starts."""
+
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+    _attr_icon = "mdi:clock-start"
+    _attr_translation_key = "next_low_tariff_start"
+
+    def __init__(self, coordinator: PreHdoCoordinator, command_id: str) -> None:
+        super().__init__(coordinator, command_id)
+        self._attr_unique_id = f"pre-hdo_{command_id}_next_low_tariff_start"
+
+    @property
+    def native_value(self) -> datetime | None:
+        if self.coordinator.data is None:
+            return None
+        return self.coordinator.data.next_low_tariff_start
+
+
+class HdoNextHighTariffStartSensor(HdoBaseSensor):
+    """Sensor showing when the next high tariff period starts."""
+
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+    _attr_icon = "mdi:clock-end"
+    _attr_translation_key = "next_high_tariff_start"
+
+    def __init__(self, coordinator: PreHdoCoordinator, command_id: str) -> None:
+        super().__init__(coordinator, command_id)
+        self._attr_unique_id = f"pre-hdo_{command_id}_next_high_tariff_start"
+
+    @property
+    def native_value(self) -> datetime | None:
+        if self.coordinator.data is None:
+            return None
+        return self.coordinator.data.next_high_tariff_start
