@@ -1,6 +1,10 @@
 """Constants for PRE Distribuce HDO integration."""
 
+from zoneinfo import ZoneInfo
+
 DOMAIN = "pre_hdo"
+
+PRAGUE_TZ = ZoneInfo("Europe/Prague")
 
 CONF_RECEIVER_COMMAND_ID = "receiver_command_id"
 CONF_PERIODS = "periods"
