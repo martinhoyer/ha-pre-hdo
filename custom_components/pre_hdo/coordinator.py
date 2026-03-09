@@ -2,86 +2,151 @@
 
 from __future__ import annotations
 
+import hashlib
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime, time, timedelta
+from datetime import date, datetime, time, timedelta
 from typing import TYPE_CHECKING
 
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api_client import PreHdoApiClient, PreHdoApiError
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, PRAGUE_TZ
-from .parser import HdoPeriod, get_current_tariff, get_time_remaining
+from .const import DOMAIN, PRAGUE_TZ
+from .parser import HdoDaySchedule, HdoPeriod, get_current_tariff, get_time_remaining
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 
+REFRESH_HOUR_START = 14
+REFRESH_HOUR_END = 15
+
 
 @dataclass
 class HdoData:
     """Processed HDO data for entity consumption."""
 
-    periods: list[HdoPeriod] = field(default_factory=list)
+    schedules: list[HdoDaySchedule] = field(default_factory=list)
     current_tariff: str | None = None
     is_low_tariff: bool = False
+    next_low_tariff_start: datetime | None = None
+    next_high_tariff_start: datetime | None = None
     minutes_to_next_change: int = 0
     minutes_to_low_tariff: int = 0
     minutes_to_high_tariff: int = 0
 
 
-def process_periods(periods: list[HdoPeriod], now: time) -> HdoData:
-    """Process raw periods into HdoData for the current time."""
-    if not periods:
+def _get_periods_for_date(
+    schedules: list[HdoDaySchedule],
+    target: date,
+) -> list[HdoPeriod]:
+    """Find the periods applicable to a specific date."""
+    for schedule in schedules:
+        if target in schedule.dates:
+            return schedule.periods
+    return []
+
+
+def _time_in_period(now: time, period: HdoPeriod) -> bool:
+    if period.end == time(0, 0):
+        return now >= period.start
+    return period.start <= now < period.end
+
+
+def _build_timeline(
+    schedules: list[HdoDaySchedule],
+    now: datetime,
+) -> list[tuple[datetime, str]]:
+    """Build a forward-looking timeline of tariff switch points.
+
+    Returns a list of (datetime, tariff) tuples representing the start
+    of each tariff period from the current period onward, across days.
+    """
+    timeline: list[tuple[datetime, str]] = []
+    current_date = now.date()
+
+    for day_offset in range(14):
+        target_date = current_date + timedelta(days=day_offset)
+        periods = _get_periods_for_date(schedules, target_date)
+        for period in periods:
+            period_start = datetime.combine(
+                target_date,
+                period.start,
+                tzinfo=PRAGUE_TZ,
+            )
+            if period_start >= now or (
+                day_offset == 0 and _time_in_period(now.time(), period)
+            ):
+                timeline.append((period_start, period.tariff))
+
+    return timeline
+
+
+def process_periods(
+    schedules: list[HdoDaySchedule],
+    now: datetime,
+) -> HdoData:
+    """Process schedules into HdoData for the current datetime."""
+    if not schedules:
         return HdoData()
 
-    current_tariff = get_current_tariff(periods, now)
-    remaining = get_time_remaining(periods, now)
+    today_periods = _get_periods_for_date(schedules, now.date())
+    current_tariff = get_current_tariff(today_periods, now.time())
+    minutes_to_next_change = get_time_remaining(today_periods, now.time())
+
+    timeline = _build_timeline(schedules, now)
+
+    next_low: datetime | None = None
+    next_high: datetime | None = None
+    skip_first_match_low = current_tariff == "NT"
+    skip_first_match_high = current_tariff == "VT"
+
+    for switch_time, tariff in timeline:
+        if tariff == "NT" and next_low is None:
+            if skip_first_match_low:
+                skip_first_match_low = False
+                continue
+            next_low = switch_time
+        elif tariff == "VT" and next_high is None:
+            if skip_first_match_high:
+                skip_first_match_high = False
+                continue
+            next_high = switch_time
+
+        if next_low is not None and next_high is not None:
+            break
 
     if current_tariff == "NT":
         minutes_to_low = 0
-        minutes_to_high = remaining
+        minutes_to_high = (
+            int((next_high - now).total_seconds() / 60) if next_high else 0
+        )
     elif current_tariff == "VT":
         minutes_to_high = 0
-        current_idx = _find_current_index(periods, now)
-        minutes_to_low = remaining
-        for i in range(current_idx + 1, len(periods)):
-            if periods[i].tariff == "NT":
-                break
-            minutes_to_low += _period_duration(periods[i])
+        minutes_to_low = (
+            int((next_low - now).total_seconds() / 60) if next_low else 0
+        )
     else:
         minutes_to_low = 0
         minutes_to_high = 0
 
     return HdoData(
-        periods=periods,
+        schedules=schedules,
         current_tariff=current_tariff,
         is_low_tariff=current_tariff == "NT",
-        minutes_to_next_change=remaining,
+        next_low_tariff_start=next_low,
+        next_high_tariff_start=next_high,
+        minutes_to_next_change=minutes_to_next_change,
         minutes_to_low_tariff=minutes_to_low,
         minutes_to_high_tariff=minutes_to_high,
     )
 
 
-def _find_current_index(periods: list[HdoPeriod], now: time) -> int:
-    """Find the index of the period containing the given time."""
-    for i, period in enumerate(periods):
-        if period.end == time(0, 0):
-            if now >= period.start:
-                return i
-        elif period.start <= now < period.end:
-            return i
-    return -1
-
-
-def _period_duration(period: HdoPeriod) -> int:
-    """Return duration of a period in minutes."""
-    if period.end == time(0, 0):
-        return 24 * 60 - (period.start.hour * 60 + period.start.minute)
-    return (period.end.hour * 60 + period.end.minute) - (
-        period.start.hour * 60 + period.start.minute
-    )
+def _get_daily_refresh_offset(command_id: str) -> int:
+    """Get a stable random minute offset (0-59) for daily refresh."""
+    h = hashlib.md5(command_id.encode(), usedforsecurity=False)
+    return int.from_bytes(h.digest()[:2]) % 60
 
 
 class PreHdoCoordinator(DataUpdateCoordinator[HdoData]):
@@ -97,18 +162,34 @@ class PreHdoCoordinator(DataUpdateCoordinator[HdoData]):
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
+            update_interval=None,
         )
         self.client = client
         self.command_id = command_id
+        self._refresh_minute = _get_daily_refresh_offset(command_id)
+
+    def _next_refresh_interval(self) -> timedelta:
+        """Calculate timedelta until next daily refresh (14:xx Prague time)."""
+        now = datetime.now(tz=PRAGUE_TZ)
+        target = now.replace(
+            hour=REFRESH_HOUR_START,
+            minute=self._refresh_minute,
+            second=0,
+            microsecond=0,
+        )
+        if target <= now:
+            target += timedelta(days=1)
+        return target - now
 
     async def _async_update_data(self) -> HdoData:
         """Fetch and process HDO data."""
         try:
-            periods = await self.client.async_get_hdo_periods(self.command_id)
+            schedules = await self.client.async_get_hdo_multi_day(self.command_id)
         except PreHdoApiError as err:
             msg = f"Error fetching HDO data: {err}"
             raise UpdateFailed(msg) from err
 
-        now = datetime.now(tz=PRAGUE_TZ).time()
-        return process_periods(periods, now)
+        self.update_interval = self._next_refresh_interval()
+
+        now = datetime.now(tz=PRAGUE_TZ)
+        return process_periods(schedules, now)

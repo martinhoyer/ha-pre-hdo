@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 from typing import TYPE_CHECKING
 
 from homeassistant.components.binary_sensor import (
@@ -10,8 +11,9 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_RECEIVER_COMMAND_ID, DOMAIN
+from .const import CONF_RECEIVER_COMMAND_ID, DOMAIN, PRAGUE_TZ
 from .coordinator import HdoData, PreHdoCoordinator
+from .parser import HdoPeriod
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -71,6 +73,14 @@ class HdoTariffBinarySensor(CoordinatorEntity[PreHdoCoordinator], BinarySensorEn
             return None
         return self.coordinator.data.is_low_tariff
 
+    @staticmethod
+    def _get_periods_today(data: HdoData) -> list[HdoPeriod]:
+        today = datetime.now(tz=PRAGUE_TZ).date()
+        for schedule in data.schedules:
+            if today in schedule.dates:
+                return schedule.periods
+        return []
+
     @property
     def extra_state_attributes(self) -> dict:
         """Return additional state attributes."""
@@ -86,6 +96,6 @@ class HdoTariffBinarySensor(CoordinatorEntity[PreHdoCoordinator], BinarySensorEn
                     "start": p.start.strftime("%H:%M"),
                     "end": p.end.strftime("%H:%M"),
                 }
-                for p in data.periods
+                for p in self._get_periods_today(data)
             ],
         }
