@@ -33,8 +33,6 @@ class HdoData:
     next_low_tariff_start: datetime | None = None
     next_high_tariff_start: datetime | None = None
     minutes_to_next_change: int = 0
-    minutes_to_low_tariff: int = 0
-    minutes_to_high_tariff: int = 0
 
 
 def _get_periods_for_date(
@@ -117,18 +115,6 @@ def process_periods(
         if next_low is not None and next_high is not None:
             break
 
-    if current_tariff == "NT":
-        minutes_to_low = 0
-        minutes_to_high = (
-            int((next_high - now).total_seconds() / 60) if next_high else 0
-        )
-    elif current_tariff == "VT":
-        minutes_to_high = 0
-        minutes_to_low = int((next_low - now).total_seconds() / 60) if next_low else 0
-    else:
-        minutes_to_low = 0
-        minutes_to_high = 0
-
     return HdoData(
         schedules=schedules,
         current_tariff=current_tariff,
@@ -136,8 +122,6 @@ def process_periods(
         next_low_tariff_start=next_low,
         next_high_tariff_start=next_high,
         minutes_to_next_change=minutes_to_next_change,
-        minutes_to_low_tariff=minutes_to_low,
-        minutes_to_high_tariff=minutes_to_high,
     )
 
 

@@ -1,7 +1,9 @@
 """Tests for PRE Distribuce binary sensor."""
 
-from datetime import date, time
+from datetime import date, datetime, time
+from unittest.mock import patch
 
+from custom_components.pre_hdo.const import PRAGUE_TZ
 from custom_components.pre_hdo.coordinator import HdoData
 from custom_components.pre_hdo.parser import HdoDaySchedule, HdoPeriod
 
@@ -29,29 +31,33 @@ class TestCanApplianceRun:
         """Appliance needs 30 min, 180 min of NT remain."""
         from custom_components.pre_hdo.binary_sensor import can_appliance_run
 
+        now = datetime(2026, 3, 10, 3, 0, tzinfo=PRAGUE_TZ)
         data = HdoData(
             schedules=[],
             current_tariff="NT",
             is_low_tariff=True,
+            next_high_tariff_start=datetime(2026, 3, 10, 6, 0, tzinfo=PRAGUE_TZ),
             minutes_to_next_change=180,
-            minutes_to_low_tariff=0,
-            minutes_to_high_tariff=180,
         )
-        assert can_appliance_run(data, 30) is True
+        with patch("custom_components.pre_hdo.binary_sensor.datetime") as mock_dt:
+            mock_dt.now.return_value = now
+            assert can_appliance_run(data, 30) is True
 
     def test_low_tariff_not_enough_time(self) -> None:
         """Appliance needs 200 min, only 120 min of NT remain."""
         from custom_components.pre_hdo.binary_sensor import can_appliance_run
 
+        now = datetime(2026, 3, 10, 14, 0, tzinfo=PRAGUE_TZ)
         data = HdoData(
             schedules=[],
             current_tariff="NT",
             is_low_tariff=True,
+            next_high_tariff_start=datetime(2026, 3, 10, 16, 0, tzinfo=PRAGUE_TZ),
             minutes_to_next_change=120,
-            minutes_to_low_tariff=0,
-            minutes_to_high_tariff=120,
         )
-        assert can_appliance_run(data, 200) is False
+        with patch("custom_components.pre_hdo.binary_sensor.datetime") as mock_dt:
+            mock_dt.now.return_value = now
+            assert can_appliance_run(data, 200) is False
 
     def test_high_tariff_cannot_run(self) -> None:
         """During high tariff, appliance cannot run."""
@@ -62,8 +68,6 @@ class TestCanApplianceRun:
             current_tariff="VT",
             is_low_tariff=False,
             minutes_to_next_change=60,
-            minutes_to_low_tariff=60,
-            minutes_to_high_tariff=0,
         )
         assert can_appliance_run(data, 30) is False
 
@@ -82,8 +86,6 @@ class TestBinarySensorAttributes:
             current_tariff="NT",
             is_low_tariff=True,
             minutes_to_next_change=120,
-            minutes_to_low_tariff=0,
-            minutes_to_high_tariff=120,
         )
         assert len(data.schedules) == 1
         assert len(data.schedules[0].periods) == 5

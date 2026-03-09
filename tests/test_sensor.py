@@ -26,32 +26,6 @@ SAMPLE_SCHEDULES = [
 class TestSensorValues:
     """Test sensor value extraction from HdoData."""
 
-    def test_minutes_to_low_tariff_during_high(self) -> None:
-        data = HdoData(
-            schedules=SAMPLE_SCHEDULES,
-            current_tariff="VT",
-            is_low_tariff=False,
-            next_low_tariff_start=datetime(2026, 3, 10, 13, 0, tzinfo=PRAGUE_TZ),
-            next_high_tariff_start=datetime(2026, 3, 10, 16, 0, tzinfo=PRAGUE_TZ),
-            minutes_to_next_change=180,
-            minutes_to_low_tariff=180,
-            minutes_to_high_tariff=0,
-        )
-        assert data.minutes_to_low_tariff == 180
-
-    def test_minutes_to_low_tariff_during_low(self) -> None:
-        data = HdoData(
-            schedules=SAMPLE_SCHEDULES,
-            current_tariff="NT",
-            is_low_tariff=True,
-            next_low_tariff_start=datetime(2026, 3, 10, 13, 0, tzinfo=PRAGUE_TZ),
-            next_high_tariff_start=datetime(2026, 3, 10, 6, 0, tzinfo=PRAGUE_TZ),
-            minutes_to_next_change=120,
-            minutes_to_low_tariff=0,
-            minutes_to_high_tariff=120,
-        )
-        assert data.minutes_to_low_tariff == 0
-
     def test_next_low_tariff_start(self) -> None:
         expected = datetime(2026, 3, 10, 13, 0, tzinfo=PRAGUE_TZ)
         data = HdoData(
@@ -61,8 +35,6 @@ class TestSensorValues:
             next_low_tariff_start=expected,
             next_high_tariff_start=datetime(2026, 3, 10, 16, 0, tzinfo=PRAGUE_TZ),
             minutes_to_next_change=180,
-            minutes_to_low_tariff=180,
-            minutes_to_high_tariff=0,
         )
         assert data.next_low_tariff_start == expected
 
@@ -75,15 +47,11 @@ class TestSensorValues:
             next_low_tariff_start=datetime(2026, 3, 10, 13, 0, tzinfo=PRAGUE_TZ),
             next_high_tariff_start=expected,
             minutes_to_next_change=180,
-            minutes_to_low_tariff=0,
-            minutes_to_high_tariff=180,
         )
         assert data.next_high_tariff_start == expected
 
     def test_no_data(self) -> None:
         data = HdoData()
-        assert data.minutes_to_low_tariff == 0
-        assert data.minutes_to_high_tariff == 0
         assert data.current_tariff is None
         assert data.next_low_tariff_start is None
         assert data.next_high_tariff_start is None

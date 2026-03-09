@@ -24,12 +24,6 @@
       }
     },
     "sensor": {
-      "minutes_to_low_tariff": {
-        "name": "Minut do nízkého tarifu"
-      },
-      "minutes_to_high_tariff": {
-        "name": "Minut do vysokého tarifu"
-      },
       "current_tariff": {
         "name": "Aktuální tarif"
       },
