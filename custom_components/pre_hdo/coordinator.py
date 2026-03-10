@@ -6,7 +6,7 @@ import hashlib
 import logging
 from dataclasses import dataclass, field
 from datetime import date, datetime, time, timedelta
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -146,9 +146,20 @@ class PreHdoCoordinator(DataUpdateCoordinator[HdoData]):
             name=DOMAIN,
             update_interval=None,
         )
-        self.client = client
-        self.command_id = command_id
-        self._refresh_minute = _get_daily_refresh_offset(command_id)
+        self.client: PreHdoApiClient = client
+        self.command_id: str = command_id
+        self._refresh_minute: int = _get_daily_refresh_offset(command_id)
+
+    def get_processed_data(self) -> HdoData:
+        """Recompute derived data from stored schedules and current time.
+
+        Entities should use this instead of self.data directly to get
+        fresh tariff state that reflects the current time, not the
+        last fetch time.
+        """
+        if self.data is None or not self.data.schedules:
+            return self.data or HdoData()
+        return process_periods(self.data.schedules, datetime.now(tz=PRAGUE_TZ))
 
     def _next_refresh_interval(self) -> timedelta:
         """Calculate timedelta until next daily refresh (14:xx Prague time)."""
@@ -163,6 +174,7 @@ class PreHdoCoordinator(DataUpdateCoordinator[HdoData]):
             target += timedelta(days=1)
         return target - now
 
+    @override
     async def _async_update_data(self) -> HdoData:
         """Fetch and process HDO data."""
         try:

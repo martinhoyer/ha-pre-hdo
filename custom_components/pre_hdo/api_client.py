@@ -5,14 +5,14 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 
-from aiohttp import ClientError, ClientSession
+from aiohttp import ClientError, ClientSession, ClientTimeout
 
 from .const import HDO_MULTI_DAY_URL, HDO_ONE_DAY_URL, PRAGUE_TZ
 from .parser import HdoDaySchedule, HdoPeriod, parse_hdo_multi_day, parse_hdo_periods
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUEST_TIMEOUT = 30
+REQUEST_TIMEOUT = ClientTimeout(total=30)
 
 
 class PreHdoApiError(Exception):
@@ -23,7 +23,7 @@ class PreHdoApiClient:
     """Async client for the PRE Distribuce HDO AJAX API."""
 
     def __init__(self, session: ClientSession) -> None:
-        self._session = session
+        self._session: ClientSession = session
 
     async def async_get_hdo_periods(
         self, command_id: str, date_str: str | None = None

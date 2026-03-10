@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_RECEIVER_COMMAND_ID, DOMAIN, PRAGUE_TZ
@@ -47,7 +48,7 @@ async def async_setup_entry(
     )
 
 
-class HdoTariffBinarySensor(CoordinatorEntity[PreHdoCoordinator], BinarySensorEntity):
+class HdoTariffBinarySensor(CoordinatorEntity[PreHdoCoordinator], BinarySensorEntity):  # pyright: ignore[reportIncompatibleVariableOverride]
     """Binary sensor showing whether low tariff is currently active."""
 
     _attr_device_class = BinarySensorDeviceClass.POWER
@@ -62,18 +63,19 @@ class HdoTariffBinarySensor(CoordinatorEntity[PreHdoCoordinator], BinarySensorEn
     ) -> None:
         super().__init__(coordinator)
         self._attr_unique_id = f"pre-hdo_{command_id}_low_tariff"
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, command_id)},
-            "name": f"PRE Distribuce HDO {command_id}",
-            "manufacturer": "PREdistribuce, a.s.",
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, command_id)},
+            name=f"PRE Distribuce HDO {command_id}",
+            manufacturer="PREdistribuce, a.s.",
+        )
 
     @property
-    def is_on(self) -> bool | None:
+    @override
+    def is_on(self) -> bool | None:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return True if low tariff is active."""
         if self.coordinator.data is None:
             return None
-        return self.coordinator.data.is_low_tariff
+        return self.coordinator.get_processed_data().is_low_tariff
 
     @staticmethod
     def _get_periods_today(data: HdoData) -> list[HdoPeriod]:
@@ -84,11 +86,12 @@ class HdoTariffBinarySensor(CoordinatorEntity[PreHdoCoordinator], BinarySensorEn
         return []
 
     @property
-    def extra_state_attributes(self) -> dict:
+    @override
+    def extra_state_attributes(self) -> dict[str, Any]:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return additional state attributes."""
-        data = self.coordinator.data
-        if data is None:
+        if self.coordinator.data is None:
             return {}
+        data = self.coordinator.get_processed_data()
         return {
             "current_tariff": data.current_tariff,
             "minutes_to_next_change": data.minutes_to_next_change,

@@ -110,3 +110,24 @@ class TestProcessPeriods:
         now = _prague_dt(2026, 3, 10, 12, 0)
         data = process_periods(SAMPLE_SCHEDULES, now)
         assert data.schedules == SAMPLE_SCHEDULES
+
+    def test_recomputation_gives_fresh_values_after_tariff_boundary(self) -> None:
+        """Recomputing with current time gives correct values after a boundary.
+
+        This documents the staleness bug: data computed at 10:00 shows
+        next_low_tariff_start=13:00. By 14:00 that's in the past.
+        Recomputing with the new time gives the correct future value.
+        """
+        t1 = _prague_dt(2026, 3, 10, 10, 0)
+        stale = process_periods(SAMPLE_SCHEDULES, t1)
+        assert stale.next_low_tariff_start == _prague_dt(2026, 3, 10, 13, 0)
+
+        t2 = _prague_dt(2026, 3, 10, 14, 0)
+        # Stale data now points to the past
+        assert stale.next_low_tariff_start < t2
+
+        # Recomputing from same schedules gives correct future value
+        fresh = process_periods(stale.schedules, t2)
+        assert fresh.current_tariff == "NT"
+        assert fresh.next_low_tariff_start == _prague_dt(2026, 3, 11, 1, 0)
+        assert fresh.next_low_tariff_start > t2

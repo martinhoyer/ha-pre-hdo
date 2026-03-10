@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
 )
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_RECEIVER_COMMAND_ID, DOMAIN
@@ -40,7 +41,7 @@ async def async_setup_entry(
     )
 
 
-class HdoBaseSensor(CoordinatorEntity[PreHdoCoordinator], SensorEntity):
+class HdoBaseSensor(CoordinatorEntity[PreHdoCoordinator], SensorEntity):  # pyright: ignore[reportIncompatibleVariableOverride]
     """Base class for HDO sensors."""
 
     _attr_has_entity_name = True
@@ -51,12 +52,12 @@ class HdoBaseSensor(CoordinatorEntity[PreHdoCoordinator], SensorEntity):
         command_id: str,
     ) -> None:
         super().__init__(coordinator)
-        self._command_id = command_id
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, command_id)},
-            "name": f"PRE Distribuce HDO {command_id}",
-            "manufacturer": "PREdistribuce, a.s.",
-        }
+        self._command_id: str = command_id
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, command_id)},
+            name=f"PRE Distribuce HDO {command_id}",
+            manufacturer="PREdistribuce, a.s.",
+        )
 
 
 class HdoCurrentTariffSensor(HdoBaseSensor):
@@ -70,10 +71,11 @@ class HdoCurrentTariffSensor(HdoBaseSensor):
         self._attr_unique_id = f"pre-hdo_{command_id}_current_tariff"
 
     @property
-    def native_value(self) -> str | None:
+    @override
+    def native_value(self) -> str | None:  # pyright: ignore[reportIncompatibleVariableOverride]
         if self.coordinator.data is None:
             return None
-        return self.coordinator.data.current_tariff
+        return self.coordinator.get_processed_data().current_tariff
 
 
 class HdoNextLowTariffStartSensor(HdoBaseSensor):
@@ -88,10 +90,11 @@ class HdoNextLowTariffStartSensor(HdoBaseSensor):
         self._attr_unique_id = f"pre-hdo_{command_id}_next_low_tariff_start"
 
     @property
-    def native_value(self) -> datetime | None:
+    @override
+    def native_value(self) -> datetime | None:  # pyright: ignore[reportIncompatibleVariableOverride]
         if self.coordinator.data is None:
             return None
-        return self.coordinator.data.next_low_tariff_start
+        return self.coordinator.get_processed_data().next_low_tariff_start
 
 
 class HdoNextHighTariffStartSensor(HdoBaseSensor):
@@ -106,7 +109,8 @@ class HdoNextHighTariffStartSensor(HdoBaseSensor):
         self._attr_unique_id = f"pre-hdo_{command_id}_next_high_tariff_start"
 
     @property
-    def native_value(self) -> datetime | None:
+    @override
+    def native_value(self) -> datetime | None:  # pyright: ignore[reportIncompatibleVariableOverride]
         if self.coordinator.data is None:
             return None
-        return self.coordinator.data.next_high_tariff_start
+        return self.coordinator.get_processed_data().next_high_tariff_start

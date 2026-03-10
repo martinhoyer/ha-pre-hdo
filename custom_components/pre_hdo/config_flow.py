@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -24,8 +24,9 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 class PreHdoConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for PRE Distribuce."""
 
-    VERSION = 1
+    VERSION: int = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
