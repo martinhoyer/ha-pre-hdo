@@ -7,10 +7,13 @@ Home Assistant integration for tracking HDO (low/high electricity tariff) schedu
 
 Inspired by [HomeAssistant-PREdistribuce](https://github.com/slesinger/HomeAssistant-PREdistribuce) by [slesinger](https://github.com/slesinger)
 
+![screenshot](screenshot.png)
+
 ## Features
 
 - **Binary sensor** - current tariff state (low/high)
-- **Sensors** - minutes to next low tariff, minutes to next high tariff, current tariff name
+- **Sensors** - current tariff name, next low/high tariff start timestamps
+- **Multi-day schedules** - fetches and processes multiple days of HDO data
 - **Config flow** - UI-based setup, no YAML needed
 - **Async** - non-blocking API calls via aiohttp
 - **No dependencies** - pure regex parsing, no lxml or other C libraries
@@ -39,8 +42,8 @@ The integration is configured through the UI. You need your **HDO receiver comma
 |--------|------|-------------|
 | Low tariff | Binary sensor | ON when low tariff (NT) is active |
 | Current tariff | Sensor | "NT" (low) or "VT" (high) |
-| Minutes to low tariff | Sensor | Minutes until low tariff starts (0 if already active) |
-| Minutes to high tariff | Sensor | Minutes until high tariff starts (0 if already active) |
+| Next low tariff start | Sensor | Timestamp of next low tariff period |
+| Next high tariff start | Sensor | Timestamp of next high tariff period |
 
 ## Development
 
