@@ -8,6 +8,8 @@ from dataclasses import dataclass, field
 from datetime import date, datetime, time, timedelta
 from typing import TYPE_CHECKING, override
 
+from homeassistant.core import CALLBACK_TYPE, callback
+from homeassistant.helpers.event import async_track_point_in_time
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api_client import PreHdoApiClient, PreHdoApiError
@@ -131,6 +133,16 @@ def _get_daily_refresh_offset(command_id: str) -> int:
     return int.from_bytes(h.digest()[:2]) % 60
 
 
+def _next_boundary(data: HdoData) -> datetime | None:
+    """Find the earliest upcoming tariff transition."""
+    candidates = [
+        t
+        for t in (data.next_low_tariff_start, data.next_high_tariff_start)
+        if t is not None
+    ]
+    return min(candidates) if candidates else None
+
+
 class PreHdoCoordinator(DataUpdateCoordinator[HdoData]):
     """Coordinator for fetching PRE Distribuce HDO data."""
 
@@ -149,6 +161,7 @@ class PreHdoCoordinator(DataUpdateCoordinator[HdoData]):
         self.client: PreHdoApiClient = client
         self.command_id: str = command_id
         self._refresh_minute: int = _get_daily_refresh_offset(command_id)
+        self._cancel_boundary_timer: CALLBACK_TYPE | None = None
 
     def get_processed_data(self) -> HdoData:
         """Recompute derived data from stored schedules and current time.
@@ -160,6 +173,34 @@ class PreHdoCoordinator(DataUpdateCoordinator[HdoData]):
         if self.data is None or not self.data.schedules:
             return self.data or HdoData()
         return process_periods(self.data.schedules, datetime.now(tz=PRAGUE_TZ))
+
+    @callback
+    def _schedule_next_boundary(self, data: HdoData) -> None:
+        """Schedule a state refresh at the next tariff boundary."""
+        if self._cancel_boundary_timer:
+            self._cancel_boundary_timer()
+            self._cancel_boundary_timer = None
+
+        boundary = _next_boundary(data)
+        if boundary is None:
+            return
+
+        self._cancel_boundary_timer = async_track_point_in_time(
+            self.hass,
+            self._on_tariff_boundary,
+            boundary,
+        )
+
+    @callback
+    def _on_tariff_boundary(self, _now: datetime) -> None:
+        """Refresh entity states when a tariff boundary is reached."""
+        self._cancel_boundary_timer = None
+        if self.data is None or not self.data.schedules:
+            return
+        now = datetime.now(tz=PRAGUE_TZ)
+        data = process_periods(self.data.schedules, now)
+        self.async_set_updated_data(data)
+        self._schedule_next_boundary(data)
 
     def _next_refresh_interval(self) -> timedelta:
         """Calculate timedelta until next daily refresh (14:xx Prague time)."""
@@ -186,4 +227,14 @@ class PreHdoCoordinator(DataUpdateCoordinator[HdoData]):
         self.update_interval = self._next_refresh_interval()
 
         now = datetime.now(tz=PRAGUE_TZ)
-        return process_periods(schedules, now)
+        data = process_periods(schedules, now)
+        self._schedule_next_boundary(data)
+        return data
+
+    @override
+    async def async_shutdown(self) -> None:
+        """Cancel boundary timer on shutdown."""
+        await super().async_shutdown()
+        if self._cancel_boundary_timer:
+            self._cancel_boundary_timer()
+            self._cancel_boundary_timer = None

@@ -3,7 +3,7 @@
 from datetime import date, datetime, time
 
 from custom_components.pre_hdo.const import PRAGUE_TZ
-from custom_components.pre_hdo.coordinator import process_periods
+from custom_components.pre_hdo.coordinator import _next_boundary, process_periods
 from custom_components.pre_hdo.parser import HdoDaySchedule, HdoPeriod
 
 WEEKDAY_PERIODS = [
@@ -131,3 +131,23 @@ class TestProcessPeriods:
         assert fresh.current_tariff == "NT"
         assert fresh.next_low_tariff_start == _prague_dt(2026, 3, 11, 1, 0)
         assert fresh.next_low_tariff_start > t2
+
+
+class TestNextBoundary:
+    def test_picks_earlier_of_two_boundaries(self) -> None:
+        """During NT, next high is sooner than next low."""
+        now = _prague_dt(2026, 3, 10, 3, 0)  # In NT 01:00-06:00
+        data = process_periods(SAMPLE_SCHEDULES, now)
+        # next_high=06:00, next_low=13:00 → boundary is 06:00
+        assert _next_boundary(data) == _prague_dt(2026, 3, 10, 6, 0)
+
+    def test_picks_earlier_during_high_tariff(self) -> None:
+        """During VT, next low is sooner than next high."""
+        now = _prague_dt(2026, 3, 10, 10, 0)  # In VT 06:00-13:00
+        data = process_periods(SAMPLE_SCHEDULES, now)
+        # next_low=13:00, next_high=16:00 → boundary is 13:00
+        assert _next_boundary(data) == _prague_dt(2026, 3, 10, 13, 0)
+
+    def test_returns_none_for_empty_data(self) -> None:
+        data = process_periods([], _prague_dt(2026, 3, 10, 12, 0))
+        assert _next_boundary(data) is None
