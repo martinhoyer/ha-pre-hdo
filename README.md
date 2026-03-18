@@ -5,6 +5,8 @@
 
 Home Assistant integration for tracking HDO (low/high electricity tariff) schedules from [PRE Distribuce](https://www.predistribuce.cz) (Czech Republic).
 
+More information about HDO: https://www.predistribuce.cz/cs/potrebuji-zaridit/zakaznici/stav-hdo/
+
 Inspired by [HomeAssistant-PREdistribuce](https://github.com/slesinger/HomeAssistant-PREdistribuce) by [slesinger](https://github.com/slesinger)
 
 ![screenshot](screenshot.png)
